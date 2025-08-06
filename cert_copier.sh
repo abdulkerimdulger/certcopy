@@ -233,34 +233,35 @@ find_latest_certs_zip() {
     echo "$latest_zip"
 }
 
-# Function to clean target directory
+# Clean target directory
 clean_target_dir() {
-    if [ -d "$TARGET_PATH" ]; then
-        echo "Cleaning target directory: $TARGET_PATH"
-        rm -f "$TARGET_PATH"/*
-    else
-        echo "Creating target directory: $TARGET_PATH"
-        mkdir -p "$TARGET_PATH"
-        if [ $? -ne 0 ]; then
-            echo
-            echo "Error: Failed to create target directory: $TARGET_PATH"
-            echo
-            exit 1
-        fi
+    TARGET_PATH=$(echo "$TARGET_PATH" | tr -d '\n\r' | sed 's/\/\//\//g')
+    
+    if [ -z "$TARGET_PATH" ]; then
+        echo "Error: Target path is not set"
+        exit 1
     fi
+
+    mkdir -p "$(dirname "$TARGET_PATH")"
+    rm -rf "$TARGET_PATH"
+    mkdir -p "$TARGET_PATH"
+    chmod 755 "$TARGET_PATH"
 }
 
 # Parse command line arguments
-while [[ $# -gt 0 ]]; do
+if [ $# -gt 0 ]; then
     case $1 in
         --install)
             install_script
+            exit 0
             ;;
         --reset)
             reset_config
+            exit 0
             ;;
         --config)
             show_config "show_only"
+            exit 0
             ;;
         --help)
             show_usage
@@ -273,58 +274,30 @@ while [[ $# -gt 0 ]]; do
             exit 1
             ;;
     esac
-    shift
-done
+fi
 
 # Main execution
 main() {
-    # Now load the config (either existing or newly created)
     load_config
-    
-    echo
-    echo "Using target path: $TARGET_PATH"
-    echo
+    local certs_zip=$(find_latest_certs_zip)
+    local temp_dir=$(mktemp -d)
 
-    local certs_zip
-    certs_zip=$(find_latest_certs_zip)
-    echo "Found certificate zip file: $certs_zip"
-    echo
-
-    # Create temporary directory
-    temp_dir=$(mktemp -d)
-    echo "Created temporary directory: $temp_dir"
-    echo
-
-    # Unzip certificates
-    unzip -q "$certs_zip" -d "$temp_dir"
-    if [ $? -ne 0 ]; then
-        echo "Error: Failed to unzip certificate file"
-        rm -rf "$temp_dir"
-        echo
-        exit 1
-    fi
-
-    # Clean target directory
     clean_target_dir
-    echo
-
-    # Copy certificates
-    echo "Copying certificates to target directory..."
-    cp "$temp_dir"/* "$TARGET_PATH"/ 2>/dev/null
-    if [ $? -ne 0 ]; then
-        echo "Error: Failed to copy certificates to target directory"
+    
+    unzip -q "$certs_zip" -d "$temp_dir" || {
         rm -rf "$temp_dir"
-        echo
+        echo "Error: Failed to unzip certificate file"
         exit 1
-    fi
+    }
 
-    # Cleanup
+    cp "$temp_dir"/* "$TARGET_PATH"/ 2>/dev/null || {
+        rm -rf "$temp_dir"
+        echo "Error: Failed to copy certificates"
+        exit 1
+    }
+
     rm -rf "$temp_dir"
-    echo "Cleanup complete"
-    echo
-
-    echo "Certificate installation complete!"
-    echo
+    echo "Certificates installed successfully"
 }
 
 main "$@" 
