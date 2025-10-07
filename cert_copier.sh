@@ -299,7 +299,8 @@ main() {
     }
 
     rm -rf "$temp_dir"
-    echo "Certificates installed successfully"
+    local filename=$(basename "$certs_zip")
+    echo "Certificates installed successfully from: $filename"
 }
 
 main "$@" 
