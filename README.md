@@ -1,10 +1,10 @@
 # Certificate Copier
 
-A bash script for macOS that automatically manages certificate files. It finds the latest `certs(XX).zip` file in your Downloads folder and copies its certificates to your specified directory.
+A bash script for macOS that automatically manages certificate files. It finds the latest `certs*.zip` file in your Downloads folder (supports various browser suffixes) and copies its certificates to your specified directory.
 
 ## Features
 
-- Automatically finds the latest `certs(XX).zip` file in Downloads (based on version number)
+- Automatically finds the latest `certs*.zip` file in Downloads (supports various browser suffixes like certs-2.zip, certs(65).zip, etc.)
 - Cleans target directory and copies new certificates
 - Interactive setup on first run
 - Secure handling of temporary files
@@ -37,17 +37,30 @@ On first run:
 3. Certificates will be copied
 
 On subsequent runs:
-1. Latest `certs(XX).zip` file is found in Downloads
+1. Latest `certs*.zip` file is found in Downloads (by creation date)
 2. Certificates are extracted to a temporary directory
 3. Target directory is cleaned
 4. New certificates are copied
 5. Temporary files are cleaned up
+6. Success message shows which file was used
+
+## Supported File Names
+
+The script supports various browser download naming patterns:
+
+- `certs.zip` (no suffix)
+- `certs-2.zip` (Safari style)
+- `certs(65).zip` (Firefox style)
+- `certs-anything.zip` (other browsers)
+- Any file starting with `certs` and ending with `.zip`
+
+The script automatically selects the **most recently created** file.
 
 ## Configuration
 
 - Config file: `~/.cert_copier_config`
 - Command shortcut: `certcopy` (for ZSH)
-- Source files: `~/Downloads/certs(XX).zip`
+- Source files: `~/Downloads/certs*.zip` (latest by creation date)
 
 ## Requirements
 
