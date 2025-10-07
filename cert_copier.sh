@@ -50,7 +50,8 @@ show_usage() {
     echo "Usage: certcopy [OPTIONS]"
     echo
     echo "Description:"
-    echo "  Automatically finds the latest certs(XX).zip file in Downloads folder"
+    echo "  Automatically finds the latest certs*.zip file in Downloads folder"
+    echo "  (supports various browser suffixes like certs-2.zip, certs(65).zip, etc.)"
     echo "  and copies its contents to a configured target directory."
     echo
     echo "Options:"
@@ -72,7 +73,7 @@ show_usage() {
     echo "Configuration:"
     echo "  Config file: ~/.cert_copier_config"
     echo "  Command shortcut: 'certcopy' (added to ~/.zshrc)"
-    echo "  Source files: ~/Downloads/certs(XX).zip"
+    echo "  Source files: ~/Downloads/certs*.zip (latest by creation date)"
     echo
 }
 
@@ -218,12 +219,13 @@ load_config() {
 # Function to find the latest certs zip file
 find_latest_certs_zip() {
     local latest_zip
-    # Find all matching files and sort by the number in parentheses
-    latest_zip=$(find "$DOWNLOADS_DIR" -maxdepth 1 -name "certs(*).zip" | perl -ne 'if(/certs\((\d+)\)\.zip/){print "$1 $_"}' | sort -n | tail -n1 | cut -d" " -f2-)
+    # Find all files that start with 'certs' and end with '.zip', then sort by creation time
+    latest_zip=$(find "$DOWNLOADS_DIR" -maxdepth 1 -name "certs*.zip" -type f -exec stat -f "%B %N" {} \; | sort -n | tail -n1 | cut -d" " -f2-)
     
     if [ -z "$latest_zip" ]; then
         echo
         echo "No certificate zip file found in Downloads directory."
+        echo "Looking for files starting with 'certs' and ending with '.zip'"
         echo
         exit 1
     fi
