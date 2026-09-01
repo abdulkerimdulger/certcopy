@@ -300,7 +300,11 @@ main() {
 
     rm -rf "$temp_dir"
     local filename=$(basename "$certs_zip")
-    echo "Certificates installed successfully from: $filename"
+    local created_ts created_at now_ts time_ago
+    created_ts=$(stat -f "%B" "$certs_zip")
+    created_at=$(date -r "$created_ts" "+%Y-%m-%d %H:%M:%S")
+    now_ts=$(date +%s)
+    echo "Certificates installed successfully from: $filename  (created at: $created_at)"
 }
 
 main "$@" 
